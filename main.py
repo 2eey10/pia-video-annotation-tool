@@ -137,7 +137,6 @@ class Player(QtWidgets.QMainWindow):
         self.next_visible = self.current_video != self.num_videos - 1
         self.remove_visible = self.current_video_attrs["name"] in self.annotations and len(self.annotations[self.current_video_attrs["name"]]["annotations"]) > 0
         
-        
         self.current_annotation = self.current_event + str(self.current_ann_idx)
 
         self.action_previous.setVisible(self.prev_visible)
@@ -171,18 +170,18 @@ class Player(QtWidgets.QMainWindow):
 
 
         # New shortcuts for moving frame
-        self.shortcut_frame_forward = QShortcut(QKeySequence(QtCore.Qt.Key_D), self)
+        self.shortcut_frame_forward = QShortcut(QKeySequence(QtCore.Qt.Key_E), self)
         self.shortcut_frame_forward.activated.connect(partial(self.moveFrameForward, unit=1))
         
 
-        self.shortcut_frame_backward = QShortcut(QKeySequence(QtCore.Qt.Key_A), self)
+        self.shortcut_frame_backward = QShortcut(QKeySequence(QtCore.Qt.Key_W), self)
         self.shortcut_frame_backward.activated.connect(partial(self.moveFrameBackward, unit=1))
 
 
-        self.shortcut_frame_forward = QShortcut(QKeySequence(QtCore.Qt.Key_K), self)
+        self.shortcut_frame_forward = QShortcut(QKeySequence(QtCore.Qt.Key_R), self)
         self.shortcut_frame_forward.activated.connect(partial(self.moveFrameForward, unit=10))
 
-        self.shortcut_frame_backward = QShortcut(QKeySequence(QtCore.Qt.Key_J), self)
+        self.shortcut_frame_backward = QShortcut(QKeySequence(QtCore.Qt.Key_Q), self)
         self.shortcut_frame_backward.activated.connect(partial(self.moveFrameBackward, unit=10))
 
         # for s in string.ascii_uppercase:
@@ -211,7 +210,7 @@ class Player(QtWidgets.QMainWindow):
                 # # Store the latest annotation key (optional)
                 # self.current_annotation = last_annotation_key
                 for i, char in enumerate(last_annotation_key):
-                    print(char)
+                    # print(char)
                     if char.isdigit():
                         key = last_annotation_key[:i]  # Text part
                         idx = int(last_annotation_key[i:])  # Number part
@@ -221,6 +220,7 @@ class Player(QtWidgets.QMainWindow):
         return None, None  # Return None if there are no annotations
 
     def removeAnnotations(self):
+
         # Remove the latest annotation
         if self.current_video_attrs["annotations"]:
             # Get the keys and sort them to find the last added annotation
@@ -228,6 +228,15 @@ class Player(QtWidgets.QMainWindow):
             if annotation_keys:
                 last_annotation_key = annotation_keys[-1]  # Get the last key
                 del self.current_video_attrs["annotations"][last_annotation_key]  # Remove the last annotation
+
+        if self.current_video_attrs["annotations_frame"]:
+            # Get the keys and sort them to find the last added annotation
+            annotation_keys = list(self.current_video_attrs["annotations_frame"].keys())
+            if annotation_keys:
+                last_annotation_key = annotation_keys[-1]  # Get the last key
+                del self.current_video_attrs["annotations_frame"][last_annotation_key]  # Remove the last annotation
+        
+
 
         self.annotations[self.current_video_attrs["name"]] = self.current_video_attrs
 
@@ -239,11 +248,26 @@ class Player(QtWidgets.QMainWindow):
 
     def previousShortcut(self):
         if self.prev_visible:
-            self.previous()
+            if self.current_event == "E":
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+                msg_box.setText("Time stamp should be paired")
+                msg_box.setWindowTitle("Warning")
+                msg_box.exec_()  # This will display the message box
+
+            else:
+                self.previous()
 
     def nextShortcut(self):
         if self.next_visible:
-            self.next()
+            if self.current_event == "E":
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+                msg_box.setText("Time stamp should be paired")
+                msg_box.setWindowTitle("Warning")
+                msg_box.exec_()  # This will display the message box
+            else:
+                self.next()
             
     def moveFrameForward(self, unit):
         # Move the slider 1 unit forward
@@ -280,7 +304,7 @@ class Player(QtWidgets.QMainWindow):
     def decrease_loaded_event_idx(self, event, idx):
         if event == "S":
             event = "E"
-            idx -= 1
+            idx = max(1, idx-1)
         elif event == "E":
             event = "S"
         else:
@@ -292,30 +316,38 @@ class Player(QtWidgets.QMainWindow):
 
     def annotate(self):
 
-        self.current_video_attrs["annotations"][self.current_annotation] = [self.mediaplayer.get_position()] + self.current_video_attrs["annotations"].get(self.current_annotation, [])
-        
-        ## New
-        # Get current time position in milliseconds
-        current_time = self.mediaplayer.get_time()
+        if self.current_annotation in self.current_video_attrs["annotations"].keys():
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+            msg_box.setText("Duplicated annotation")
+            msg_box.setWindowTitle("Warning")
+            msg_box.exec()  # This will display the message box
 
-        # Get FPS (Frames Per Second)
-        fps = self.mediaplayer.get_fps()
+        else:
+            self.current_video_attrs["annotations"][self.current_annotation] = [self.mediaplayer.get_position()] + self.current_video_attrs["annotations"].get(self.current_annotation, [])
+            
+            ## New
+            # Get current time position in milliseconds
+            current_time = self.mediaplayer.get_time()
 
-        # Calculate current frame number
-        current_frame = int((current_time / 1000) * fps)
+            # Get FPS (Frames Per Second)
+            fps = self.mediaplayer.get_fps()
 
-        self.current_video_attrs["annotations_frame"][self.current_annotation] = [current_frame]
+            # Calculate current frame number
+            current_frame = int((current_time / 1000) * fps)
+
+            self.current_video_attrs["annotations_frame"][self.current_annotation] = [current_frame]
 
 
-        self.annotations[self.current_video_attrs["name"]] = self.current_video_attrs
-        
-        self.update_loaded_event_idx(self.current_event, self.current_ann_idx)
-        self.current_annotation = self.current_event + str(self.current_ann_idx)
+            self.annotations[self.current_video_attrs["name"]] = self.current_video_attrs
+            
+            self.update_loaded_event_idx(self.current_event, self.current_ann_idx)
+            self.current_annotation = self.current_event + str(self.current_ann_idx)
 
-        self.setVisibilities()
+            self.setVisibilities()
 
-        if self.save_frames:
-            self.writeFrameToFile()
+            if self.save_frames:
+                self.writeFrameToFile()
 
     def writeFrameToFile(self):
         path_to_save = os.path.join(self.annotations_dir, self.current_annotation)
@@ -414,6 +446,7 @@ class Player(QtWidgets.QMainWindow):
 
 
     def previous(self):
+
         print("Previous clicked")
 
         self.reset_annotation()
@@ -477,7 +510,6 @@ class Player(QtWidgets.QMainWindow):
         else:
             video_name = video_path.split("/")[-1]
 
-
         self.file = self.OpenFile(video_path)
 
         if video_name in self.annotations:
@@ -538,8 +570,6 @@ class Player(QtWidgets.QMainWindow):
         self.progress = QtWidgets.QProgressBar(self)
         self.progress.setMaximum(self.num_videos)
         self.vboxlayout.addWidget(self.progress)
-
-
 
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(100)
