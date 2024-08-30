@@ -5,7 +5,7 @@ import os
 import argparse
 import vlc
 from functools import partial
-
+import time
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import QSize, Qt
@@ -153,7 +153,7 @@ class Player(QtWidgets.QMainWindow):
         self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
 
     def createShortcuts(self):
-        self.shortcut_playpause = QShortcut(QKeySequence(QtCore.Qt.Key_Return), self)
+        self.shortcut_playpause = QShortcut(QKeySequence(QtCore.Qt.Key_Space), self)
         self.shortcut_playpause.activated.connect(self.playPauseShortcut)
 
         self.shortcut_previous = QShortcut(QKeySequence(QtCore.Qt.Key_Left), self)
@@ -162,7 +162,7 @@ class Player(QtWidgets.QMainWindow):
         self.shortcut_next = QShortcut(QKeySequence(QtCore.Qt.Key_Right), self)
         self.shortcut_next.activated.connect(self.nextShortcut)
 
-        self.shortcut_annotate = QShortcut(QKeySequence(QtCore.Qt.Key_Space), self)
+        self.shortcut_annotate = QShortcut(QKeySequence(QtCore.Qt.Key_Return), self)
         self.shortcut_annotate.activated.connect(self.annotate)
 
         self.shortcut_remove_annotation = QShortcut(QKeySequence(QtCore.Qt.Key_Backspace), self)
@@ -242,12 +242,13 @@ class Player(QtWidgets.QMainWindow):
             if annotation_keys:
                 last_annotation_key = annotation_keys[-1]  # Get the last key
                 del self.current_video_attrs["annotations_frame"][last_annotation_key]  # Remove the last annotation
-        
+                
 
 
         self.annotations[self.current_video_attrs["name"]] = self.current_video_attrs
 
-        self.current_annotation = last_annotation_key
+        if self.current_video_attrs["annotations_frame"]:
+            self.current_annotation = last_annotation_key
 
         self.setVisibilities()
 
@@ -277,6 +278,7 @@ class Player(QtWidgets.QMainWindow):
             if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
                 self.trigger_paired_warning()
             else:
+                time.sleep(0.3)
                 self.previous()
 
     def nextShortcut(self):
@@ -284,6 +286,7 @@ class Player(QtWidgets.QMainWindow):
             if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
                 self.trigger_paired_warning()
             else:
+                time.sleep(0.3)
                 self.next()
             
     def moveFrameForward(self, unit):
