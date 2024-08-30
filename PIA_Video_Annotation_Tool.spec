@@ -6,8 +6,8 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              pathex=[],
-             binaries=[('C:\\Program Files\\VideoLAN\\VLC\\libvlc.dll', '.'), ('C:\\Program Files\\VideoLAN\\VLC\\libvlccore.dll', '.'), ('C:\\Program Files\\VideoLAN\\VLC\\axvlc.dll', '.'), ('C:\\Program Files\\VideoLAN\\VLC\\npvlc.dll', '.')],
-             datas=[],
+             binaries=[],
+             datas=[('icons', 'icons')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
