@@ -1,29 +1,18 @@
-#  Video Annotation Tool
+#  PIA Video Annotation Tool
 Video Annotation Tool helps to annotate positions in videos possibly for events later to be processed.
-
-![App Overview](app.png)
-
-### Features
-* Developed to be time efficient.
-* Supports keyboard shortcuts.
-* Saves annotations in JSON format persistently.
-* Supports 27 different annotation(event) types at most where each is mapped to an english letter in keyboard.
-* Stateful so it continues from the first unannotated video.
-* Stores each video's annotation persistently when the video ends or next button is clicked.
-* Shows progress at bottom progress bar.
-
-### Shortcuts
-* [Space] Annotate current video with current annotation type.
-* [BackSpace] Remove all annotations of current video.
-* [Enter] Play/Pause video
-* [Left Arrow] Show Previous video
-* [Right Arrow] Show Next video (goes to first video at end)
-* [Any English Letter A-Z] Sets the current annotation type to the pressed key.
 
 
 ### Requirements
 * [Anaconda3](https://www.anaconda.com/distribution/#download-section)
 
+
+### Installation
+
+To install the necessary environment, run the following command:
+
+```bash
+conda env create -f env.yml
+```
 
 ### Running Instructions
 1. Execute `conda activate video-activation-tool` in shell.
@@ -49,13 +38,11 @@ Video Annotation Tool helps to annotate positions in videos possibly for events 
          0.2289014607667923,
          0.194297194480896,
          ... other annoation positions within [0, 1] annotated with A
-      ]
+      ],
+   "annotations_frames":{
+      "S": ...
    }
 }
 ```
-* Annotation positions corresponds to the position in the video mapped to [0, 1].
-* Annotated frame corresponds to `annotated_position*total_number_of_frames_in_video`.
-
-### References
-* Video player icons: https://www.flaticon.com/packs/music-player-icons
-* App icon: https://www.flaticon.com/free-icon/pikachu_188987#term=pikachu&page=1&position=1
+- The `"annotations"` positions correspond to the position in the video, normalized to a range of `[0, 1]`.
+- The `"annotations_frames"` correspond to the current frame number.
