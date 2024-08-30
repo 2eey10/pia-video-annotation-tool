@@ -409,7 +409,7 @@ class Player(QtWidgets.QMainWindow):
         # self.action_play = QAction(QIcon("icons/play-button.png"), "Play", self)
         self.action_play = QAction(QIcon(self.resource_path("icons/play-button.png")), "Play", self)
         self.action_play.triggered.connect(self.play)
-        self.action_play.setStatusTip("Play Video [Enter Key]")
+        self.action_play.setStatusTip("Play Video [Space Key]")
         toolbar.addAction(self.action_play)
 
 
@@ -417,7 +417,7 @@ class Player(QtWidgets.QMainWindow):
         self.action_pause = QAction(QIcon(self.resource_path("icons/pause.png")), "Pause", self)
         self.action_pause.triggered.connect(self.pause)
         self.action_pause.setVisible(False)
-        self.action_pause.setStatusTip("Pause Video [Enter Key]")
+        self.action_pause.setStatusTip("Pause Video [Space Key]")
         toolbar.addAction(self.action_pause)
 
         # self.action_previous = QAction(QIcon("icons/previous.png"), "Previous Video", self)
@@ -435,7 +435,7 @@ class Player(QtWidgets.QMainWindow):
         # self.action_annotate = QAction(QIcon("icons/plus.png"), "Annotate to current frame of the video", self)
         self.action_annotate = QAction(QIcon(self.resource_path("icons/plus.png")), "Annotate to current frame of the video", self)
         self.action_annotate.triggered.connect(self.annotate)
-        self.action_annotate.setStatusTip("Annotate to current frame of the video [Space Key]")
+        self.action_annotate.setStatusTip("Annotate to current frame of the video [Enter Key]")
         toolbar.addAction(self.action_annotate)
 
         # self.action_remove_annotations = QAction(QIcon("icons/cancel.png"), "Remove current video's annotations", self)
