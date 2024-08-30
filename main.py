@@ -469,19 +469,6 @@ class Player(QtWidgets.QMainWindow):
         print("Pause clicked")
         self.PlayPause()
 
-    # def reset_annotation(self):
-    #     if self.current_video_attrs["annotations_frame"]:
-    #         print(self.current_video_attrs["annotations_frame"])
-    #         keys = list(self.current_video_attrs["annotations_frame"].keys())
-    #         idx_keys = sorted([int(key[1:]) for key in keys])
-    #         self.current_event = "S"
-    #         self.current_ann_idx = max(idx_keys) + 1
-
-    #     else:
-    #         self.current_event = "S"
-    #         self.current_ann_idx = 1
-    #         self.current_annotation = self.current_event + str(self.current_ann_idx)
-    #         self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
 
     def reset_annotation(self):
         self.current_event = "S"
@@ -735,13 +722,108 @@ class MarkWidget(QtWidgets.QWidget):
         self.setMaximumSize(5000, 30)
         random.seed(102)
 
-        self.index_color_map = {}
+        self.index_color_map = {
+            "1": [104, 67, 31],
+            "2": [112, 254, 249],
+            "3": [35, 16, 234],
+            "4": [255, 218, 30],
+            "5": [1, 235, 94],
+            "6": [251, 78, 251],
+            "7": [137, 136, 164],
+            "8": [230, 3, 110],
+            "9": [112, 246, 18],
+            "10": [252, 246, 253],
+            "11": [26, 149, 229],
+            "12": [3, 107, 104],
+            "13": [221, 99, 6],
+            "14": [250, 119, 131],
+            "15": [88, 14, 130],
+            "16": [175, 15, 213],
+            "17": [158, 224, 141],
+            "18": [5, 247, 203],
+            "19": [40, 164, 10],
+            "20": [156, 107, 251],
+            "21": [1, 2, 10],
+            "22": [170, 129, 72],
+            "23": [198, 13, 9],
+            "24": [242, 163, 227],
+            "25": [80, 213, 90],
+            "26": [153, 179, 0],
+            "27": [246, 242, 136],
+            "28": [232, 205, 54],
+            "29": [48, 0, 118],
+            "30": [145, 141, 159],
+            "31": [209, 123, 57],
+            "32": [54, 238, 181],
+            "33": [234, 129, 225],
+            "34": [68, 18, 185],
+            "35": [217, 190, 167],
+            "36": [46, 109, 136],
+            "37": [39, 36, 205],
+            "38": [97, 184, 251],
+            "39": [223, 58, 100],
+            "40": [2, 77, 235],
+            "41": [176, 84, 182],
+            "42": [186, 197, 194],
+            "43": [243, 216, 112],
+            "44": [222, 184, 177],
+            "45": [84, 47, 72],
+            "46": [88, 194, 209],
+            "47": [52, 87, 214],
+            "48": [115, 250, 36],
+            "49": [229, 59, 230],
+            "50": [244, 144, 16],
+            "51": [189, 54, 232],
+            "52": [7, 32, 192],
+            "53": [212, 224, 223],
+            "54": [130, 97, 27],
+            "55": [170, 218, 211],
+            "56": [43, 206, 103],
+            "57": [120, 135, 216],
+            "58": [200, 36, 50],
+            "59": [112, 133, 45],
+            "60": [62, 79, 130],
+            "61": [68, 33, 4],
+            "62": [59, 247, 47],
+            "63": [112, 191, 51],
+            "64": [195, 149, 250],
+            "65": [204, 209, 119],
+            "66": [117, 250, 86],
+            "67": [198, 190, 30],
+            "68": [174, 134, 5],
+            "69": [17, 104, 54],
+            "70": [201, 41, 252],
+            "71": [118, 108, 86],
+            "72": [202, 3, 59],
+            "73": [31, 115, 187],
+            "74": [249, 162, 174],
+            "75": [76, 201, 1],
+            "76": [219, 11, 176],
+            "77": [38, 196, 198],
+            "78": [112, 205, 249],
+            "79": [198, 93, 59],
+            "80": [157, 228, 193],
+            "81": [5, 249, 253],
+            "82": [133, 1, 52],
+            "83": [255, 207, 192],
+            "84": [55, 196, 143],
+            "85": [84, 35, 250],
+            "86": [42, 201, 45]
+        }
+
 
     def get_color_for_index(self, index):
-        if index not in self.index_color_map:
-            # Generate a random color and store it in the map
-            self.index_color_map[index] = QColor(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        return self.index_color_map[index]
+        if str(index) not in self.index_color_map:
+            # Generate a random color and store it in the map as a list
+            self.index_color_map[str(index)] = [
+                random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255)
+            ]
+        # Convert the list to a QColor object before returning
+        color_values = self.index_color_map[str(index)]
+        return QColor(color_values[0], color_values[1], color_values[2])
+
 
 
     def paintEvent(self, e):
