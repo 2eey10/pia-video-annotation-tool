@@ -205,26 +205,6 @@ class Player(QtWidgets.QMainWindow):
 
         return annotationShortcut
     
-    # def getLatestAnnotation(self):
-    #     # Get the latest annotation
-    #     if self.current_video_attrs["annotations"]:
-    #         # Get the keys and sort them to find the last added annotation
-    #         annotation_keys = sorted(self.current_video_attrs["annotations"].keys())
-    #         if annotation_keys:
-    #             last_annotation_key = annotation_keys[-1]  # Get the last key
-    #             last_annotation = self.current_video_attrs["annotations"][last_annotation_key]  # Get the last annotation
-                
-    #             # # Store the latest annotation key (optional)
-    #             # self.current_annotation = last_annotation_key
-    #             for i, char in enumerate(last_annotation_key):
-    #                 # print(char)
-    #                 if char.isdigit():
-    #                     key = last_annotation_key[:i]  # Text part
-    #                     idx = int(last_annotation_key[i:])  # Number part
-    #                     break
-
-    #             return key, idx  # Return the latest annotation
-    #     return None, None  # Return None if there are no annotations
 
     def removeAnnotations(self):
 
@@ -264,10 +244,42 @@ class Player(QtWidgets.QMainWindow):
         else:
             return None
     
-    def trigger_paired_warning(self,):
+    def check_paired_ts_key(self, annotations_frame_dict):
+        if annotations_frame_dict:
+            keys = list(annotations_frame_dict.keys())
+            
+            # Extract all indices that appear in the keys
+            indices = sorted(set(int(key[1:]) for key in keys if key[1:].isdigit()))
+            
+            # Initialize lists to hold paired and unpaired keys
+            paired = []
+            unpaired = []
+
+            # Loop to find paired and unpaired keys
+            for i in indices:
+                s_key = f"S{i}"
+                e_key = f"E{i}"
+                if s_key in keys and e_key in keys:
+                    paired.append((s_key, e_key))
+                else:
+                    if s_key in keys:
+                        unpaired.append(s_key)
+                    if e_key in keys:
+                        unpaired.append(e_key)
+
+            # Check if there are any unpaired keys
+            if not unpaired:
+                return None
+            else:
+                return unpaired
+        else:
+            return None
+
+
+    def trigger_paired_warning(self, text = ""):
         msg_box = QtWidgets.QMessageBox()
         msg_box.setIcon(QtWidgets.QMessageBox.Warning)
-        msg_box.setText("Time stamp should be paired")
+        msg_box.setText(f"Time stamp should be paired, {text}")
         msg_box.setWindowTitle("Warning")
         msg_box.exec_()  # This will display the message box
             
@@ -275,16 +287,18 @@ class Player(QtWidgets.QMainWindow):
     
     def previousShortcut(self):
         if self.prev_visible:
-            if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
-                self.trigger_paired_warning()
+            unpaired = self.check_paired_ts_key(self.current_video_attrs["annotations_frame"])
+            if unpaired:
+                self.trigger_paired_warning(text=unpaired)
             else:
                 time.sleep(0.3)
                 self.previous()
 
     def nextShortcut(self):
         if self.next_visible:
-            if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
-                self.trigger_paired_warning()
+            unpaired = self.check_paired_ts_key(self.current_video_attrs["annotations_frame"])
+            if unpaired:
+                self.trigger_paired_warning(text=unpaired)
             else:
                 time.sleep(0.3)
                 self.next()
@@ -679,8 +693,9 @@ class Player(QtWidgets.QMainWindow):
 
             if not self.isPaused:
                 self.Stop()
-                if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
-                    self.trigger_paired_warning()
+                unpaired = self.check_paired_ts_key(self.current_video_attrs["annotations_frame"])
+                if unpaired:
+                    self.trigger_paired_warning(text=unpaired)
                     self.positionslider.setValue(0 * 1000)
                     self.play()
                 else:
@@ -703,13 +718,12 @@ class MarkWidget(QtWidgets.QWidget):
 
     def setAnnotations(self, annotations):
         self.annotations = annotations
-
         self.repaint()
 
 
     def drawWidget(self, qp):
         MAX_CAPACITY  = 1000
-        font = QFont('Serif', 8, QFont.Light)
+        font = QFont('Serif', 10, QFont.Light)
         qp.setFont(font)
         size = self.size()
         w    = size.width()
@@ -727,10 +741,18 @@ class MarkWidget(QtWidgets.QWidget):
         qp.drawRect(0, 0, w-1, h-1)
         j = 0
 
-        qp.setPen(QPen(QColor(255, 0, 0), 1, Qt.SolidLine))
-
 
         for key, poslist in self.annotations.items():
+            if key.startswith("S"):
+                # Red
+                qp.setPen(QPen(QColor(255, 0, 0), 1.5, Qt.SolidLine))
+            elif key.startswith("E"):
+                # Blue
+                qp.setPen(QPen(QColor(0, 0, 255), 1.5, Qt.SolidLine))
+            else:
+                qp.setPen(QPen(QColor(0, 0, 0), 1.5, Qt.SolidLine))  # Default to black if key doesn't match
+
+
             for pos in poslist:
                 x = int(w*pos)
                 metrics = qp.fontMetrics()
@@ -742,7 +764,7 @@ class MarkWidget(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
-
+    # os.environ["VLC_PLUGIN_PATH"] = "/usr/lib64/vlc/plugins"
     parser = argparse.ArgumentParser(
         description='PIASPACE video annotation.')
     parser.add_argument('--muted', action='store_true',
