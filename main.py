@@ -19,7 +19,8 @@ class Player(QtWidgets.QMainWindow):
 
     def __init__(self, muted=False, save_frames=False, master=None):
         QtWidgets.QMainWindow.__init__(self, master)
-        self.setWindowIcon(QIcon("icons/app.svg"))
+        # self.setWindowIcon(QIcon("icons/app.svg"))
+        self.setWindowIcon(QIcon(self.resource_path("icons/piaspace-crop.jpg")))
         self.title = "PIASPACE Video Annotation Tool"
 
         self.muted = muted
@@ -132,6 +133,12 @@ class Player(QtWidgets.QMainWindow):
         self.prev_visible = True
         self.setVisibilities()
 
+    def resource_path(self, relative_path):
+        """ Get the absolute path to a resource, works for dev and PyInstaller """
+        if hasattr(sys, '_MEIPASS'):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.path.abspath("."), relative_path)
+
     def setPrevNextVisibility(self):
         self.prev_visible = self.current_video != 0
         self.next_visible = self.current_video != self.num_videos - 1
@@ -198,26 +205,26 @@ class Player(QtWidgets.QMainWindow):
 
         return annotationShortcut
     
-    def getLatestAnnotation(self):
-        # Get the latest annotation
-        if self.current_video_attrs["annotations"]:
-            # Get the keys and sort them to find the last added annotation
-            annotation_keys = sorted(self.current_video_attrs["annotations"].keys())
-            if annotation_keys:
-                last_annotation_key = annotation_keys[-1]  # Get the last key
-                last_annotation = self.current_video_attrs["annotations"][last_annotation_key]  # Get the last annotation
+    # def getLatestAnnotation(self):
+    #     # Get the latest annotation
+    #     if self.current_video_attrs["annotations"]:
+    #         # Get the keys and sort them to find the last added annotation
+    #         annotation_keys = sorted(self.current_video_attrs["annotations"].keys())
+    #         if annotation_keys:
+    #             last_annotation_key = annotation_keys[-1]  # Get the last key
+    #             last_annotation = self.current_video_attrs["annotations"][last_annotation_key]  # Get the last annotation
                 
-                # # Store the latest annotation key (optional)
-                # self.current_annotation = last_annotation_key
-                for i, char in enumerate(last_annotation_key):
-                    # print(char)
-                    if char.isdigit():
-                        key = last_annotation_key[:i]  # Text part
-                        idx = int(last_annotation_key[i:])  # Number part
-                        break
+    #             # # Store the latest annotation key (optional)
+    #             # self.current_annotation = last_annotation_key
+    #             for i, char in enumerate(last_annotation_key):
+    #                 # print(char)
+    #                 if char.isdigit():
+    #                     key = last_annotation_key[:i]  # Text part
+    #                     idx = int(last_annotation_key[i:])  # Number part
+    #                     break
 
-                return key, idx  # Return the latest annotation
-        return None, None  # Return None if there are no annotations
+    #             return key, idx  # Return the latest annotation
+    #     return None, None  # Return None if there are no annotations
 
     def removeAnnotations(self):
 
@@ -246,26 +253,36 @@ class Player(QtWidgets.QMainWindow):
 
         # self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
 
+
+    def get_last_saved_event_key(self, annotations_frame_dict):
+        if annotations_frame_dict:
+            keys = list(annotations_frame_dict.keys())
+            last_key = keys[-1]
+            return last_key[0]
+
+        else:
+            return None
+    
+    def trigger_paired_warning(self,):
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+        msg_box.setText("Time stamp should be paired")
+        msg_box.setWindowTitle("Warning")
+        msg_box.exec_()  # This will display the message box
+            
+
+    
     def previousShortcut(self):
         if self.prev_visible:
-            if self.current_event == "E":
-                msg_box = QtWidgets.QMessageBox()
-                msg_box.setIcon(QtWidgets.QMessageBox.Warning)
-                msg_box.setText("Time stamp should be paired")
-                msg_box.setWindowTitle("Warning")
-                msg_box.exec_()  # This will display the message box
-
+            if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
+                self.trigger_paired_warning()
             else:
                 self.previous()
 
     def nextShortcut(self):
         if self.next_visible:
-            if self.current_event == "E":
-                msg_box = QtWidgets.QMessageBox()
-                msg_box.setIcon(QtWidgets.QMessageBox.Warning)
-                msg_box.setText("Time stamp should be paired")
-                msg_box.setWindowTitle("Warning")
-                msg_box.exec_()  # This will display the message box
+            if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
+                self.trigger_paired_warning()
             else:
                 self.next()
             
@@ -282,7 +299,6 @@ class Player(QtWidgets.QMainWindow):
         new_position = max(current_position - unit, 0)
         self.positionslider.setValue(new_position)
         self.setPosition(new_position)
-
 
     def setVisibilities(self):
         self.setPrevNextVisibility()
@@ -387,34 +403,40 @@ class Player(QtWidgets.QMainWindow):
 
         self.addToolBar(toolbar)
 
-        self.action_play = QAction(QIcon("icons/play-button.png"), "Play", self)
+        # self.action_play = QAction(QIcon("icons/play-button.png"), "Play", self)
+        self.action_play = QAction(QIcon(self.resource_path("icons/play-button.png")), "Play", self)
         self.action_play.triggered.connect(self.play)
         self.action_play.setStatusTip("Play Video [Enter Key]")
         toolbar.addAction(self.action_play)
 
 
-        self.action_pause = QAction(QIcon("icons/pause.png"), "Pause", self)
+        # self.action_pause = QAction(QIcon("icons/pause.png"), "Pause", self)
+        self.action_pause = QAction(QIcon(self.resource_path("icons/pause.png")), "Pause", self)
         self.action_pause.triggered.connect(self.pause)
         self.action_pause.setVisible(False)
         self.action_pause.setStatusTip("Pause Video [Enter Key]")
         toolbar.addAction(self.action_pause)
 
-        self.action_previous = QAction(QIcon("icons/previous.png"), "Previous Video", self)
+        # self.action_previous = QAction(QIcon("icons/previous.png"), "Previous Video", self)
+        self.action_previous = QAction(QIcon(self.resource_path("icons/previous.png")), "Previous Video", self)
         self.action_previous.setStatusTip("Previous Video [Left]")
         self.action_previous.triggered.connect(self.previous)
         toolbar.addAction(self.action_previous)
 
-        self.action_next = QAction(QIcon("icons/next.png"), "Next Video", self)
+        # self.action_next = QAction(QIcon("icons/next.png"), "Next Video", self)
+        self.action_next = QAction(QIcon(self.resource_path("icons/next.png")), "Next Video", self)
         self.action_next.triggered.connect(self.next)
         self.action_next.setStatusTip("Next Video [Right]")
         toolbar.addAction(self.action_next)
 
-        self.action_annotate = QAction(QIcon("icons/plus.png"), "Annotate to current frame of the video", self)
+        # self.action_annotate = QAction(QIcon("icons/plus.png"), "Annotate to current frame of the video", self)
+        self.action_annotate = QAction(QIcon(self.resource_path("icons/plus.png")), "Annotate to current frame of the video", self)
         self.action_annotate.triggered.connect(self.annotate)
         self.action_annotate.setStatusTip("Annotate to current frame of the video [Space Key]")
         toolbar.addAction(self.action_annotate)
 
-        self.action_remove_annotations = QAction(QIcon("icons/cancel.png"), "Remove current video's annotations", self)
+        # self.action_remove_annotations = QAction(QIcon("icons/cancel.png"), "Remove current video's annotations", self)
+        self.action_remove_annotations = QAction(QIcon(self.resource_path("icons/cancel.png")), "Remove current video's annotations", self)
         self.action_remove_annotations.triggered.connect(self.removeAnnotations)
         self.action_remove_annotations.setStatusTip("Remove current video's annotations [Backspace Key]")
         toolbar.addAction(self.action_remove_annotations)
@@ -654,7 +676,13 @@ class Player(QtWidgets.QMainWindow):
 
             if not self.isPaused:
                 self.Stop()
-                self.next()
+                if self.current_event == "E" or self.get_last_saved_event_key(self.current_video_attrs["annotations_frame"]) == "S":
+                    self.trigger_paired_warning()
+                    self.positionslider.setValue(0 * 1000)
+                    self.play()
+                else:
+                    self.next()
+                    print("Next based on Update UI")
 
 class MarkWidget(QtWidgets.QWidget):
     def __init__(self):
