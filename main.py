@@ -6,6 +6,7 @@ import argparse
 import vlc
 from functools import partial
 import time
+import random
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import QSize, Qt
@@ -207,7 +208,7 @@ class Player(QtWidgets.QMainWindow):
     
 
     def removeAnnotations(self):
-
+        annotation_keys = None
         # Remove the latest annotation
         if self.current_video_attrs["annotations"]:
             # Get the keys and sort them to find the last added annotation
@@ -223,17 +224,18 @@ class Player(QtWidgets.QMainWindow):
                 last_annotation_key = annotation_keys[-1]  # Get the last key
                 del self.current_video_attrs["annotations_frame"][last_annotation_key]  # Remove the last annotation
                 
-
-
         self.annotations[self.current_video_attrs["name"]] = self.current_video_attrs
 
         if self.current_video_attrs["annotations_frame"]:
             self.current_annotation = last_annotation_key
 
         self.setVisibilities()
-
-        # self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
-
+        if annotation_keys is not None:
+            event, idx = last_annotation_key[0], int(last_annotation_key[1:])
+            self.current_event = event
+            self.current_ann_idx = idx
+            self.current_annotation = self.current_event + str(self.current_ann_idx)
+            self.statusbar.showMessage("Deleted Annotation: " + last_annotation_key + " / Current Annotation: " + self.current_annotation)
 
     def get_last_saved_event_key(self, annotations_frame_dict):
         if annotations_frame_dict:
@@ -467,11 +469,26 @@ class Player(QtWidgets.QMainWindow):
         print("Pause clicked")
         self.PlayPause()
 
+    # def reset_annotation(self):
+    #     if self.current_video_attrs["annotations_frame"]:
+    #         print(self.current_video_attrs["annotations_frame"])
+    #         keys = list(self.current_video_attrs["annotations_frame"].keys())
+    #         idx_keys = sorted([int(key[1:]) for key in keys])
+    #         self.current_event = "S"
+    #         self.current_ann_idx = max(idx_keys) + 1
+
+    #     else:
+    #         self.current_event = "S"
+    #         self.current_ann_idx = 1
+    #         self.current_annotation = self.current_event + str(self.current_ann_idx)
+    #         self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
+
     def reset_annotation(self):
         self.current_event = "S"
         self.current_ann_idx = 1
         self.current_annotation = self.current_event + str(self.current_ann_idx)
         self.statusbar.showMessage("Current Annotation: " + self.current_annotation)
+        
     
     def update_current_annotation(self):
         self.update_loaded_event_idx(self.current_event, self.current_ann_idx)
@@ -510,6 +527,11 @@ class Player(QtWidgets.QMainWindow):
 
         if video_name in self.annotations:
             self.current_video_attrs = self.annotations[video_name]
+            if self.current_video_attrs["annotations_frame"]:
+                keys = list(self.current_video_attrs["annotations_frame"].keys())
+                idx_keys = sorted([int(key[1:]) for key in keys])
+                self.current_event = "S"
+                self.current_ann_idx = max(idx_keys) + 1
         else:
             self.current_video_attrs = {
                 "name": video_name,
@@ -553,8 +575,11 @@ class Player(QtWidgets.QMainWindow):
 
         if video_name in self.annotations:
             self.current_video_attrs = self.annotations[video_name]
-            
-
+            if self.current_video_attrs["annotations_frame"]:
+                keys = list(self.current_video_attrs["annotations_frame"].keys())
+                idx_keys = sorted([int(key[1:]) for key in keys])
+                self.current_event = "S"
+                self.current_ann_idx = max(idx_keys) + 1
         else:
             self.current_video_attrs = {
                 "name": video_name,
@@ -708,6 +733,15 @@ class MarkWidget(QtWidgets.QWidget):
 
         self.annotations = {}
         self.setMaximumSize(5000, 30)
+        random.seed(102)
+
+        self.index_color_map = {}
+
+    def get_color_for_index(self, index):
+        if index not in self.index_color_map:
+            # Generate a random color and store it in the map
+            self.index_color_map[index] = QColor(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        return self.index_color_map[index]
 
 
     def paintEvent(self, e):
@@ -740,18 +774,10 @@ class MarkWidget(QtWidgets.QWidget):
         qp.setBrush(Qt.NoBrush)
         qp.drawRect(0, 0, w-1, h-1)
         j = 0
-
-
+        
         for key, poslist in self.annotations.items():
-            if key.startswith("S"):
-                # Red
-                qp.setPen(QPen(QColor(255, 0, 0), 1.5, Qt.SolidLine))
-            elif key.startswith("E"):
-                # Blue
-                qp.setPen(QPen(QColor(0, 0, 255), 1.5, Qt.SolidLine))
-            else:
-                qp.setPen(QPen(QColor(0, 0, 0), 1.5, Qt.SolidLine))  # Default to black if key doesn't match
-
+            current_idx = int(key[1:])
+            qp.setPen(QPen(self.get_color_for_index(current_idx), 1.5, Qt.SolidLine))
 
             for pos in poslist:
                 x = int(w*pos)
