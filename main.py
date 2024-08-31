@@ -15,6 +15,13 @@ from PyQt5.QtWidgets import QToolBar, QAction, QStatusBar, QShortcut, QFileDialo
 
 import glob
 
+# windows
+# os.add_dll_directory(r'your_vlc_path') 
+
+# ubuntu/mac
+# os.environ['LD_LIBRARY_PATH'] = 'your_vlc_path'  
+
+
 
 class Player(QtWidgets.QMainWindow):
 
